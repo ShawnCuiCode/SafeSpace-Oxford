@@ -1,5 +1,6 @@
 # Load required libraries
 library(dplyr)
+library(readr)
 
 # Define a function to process all .csv files in a specified folder for Oxford city data
 combine_monthly_data_from_folder <- function(folder_path, output_path) {
@@ -13,7 +14,7 @@ combine_monthly_data_from_folder <- function(folder_path, output_path) {
   # Loop through each file path in the list
   for (file_path in file_paths) {
     # Read the data from each .csv file
-    monthly_data <- read.csv(file_path)
+    monthly_data <- read_csv(file_path)
 
     # Print column names to check for any inconsistencies
     print(colnames(monthly_data))
@@ -36,7 +37,7 @@ combine_monthly_data_from_folder <- function(folder_path, output_path) {
   }
 
   # Write the combined data to a single CSV file
-  write.csv(combined_data, output_path, row.names = FALSE)
+  write_csv(combined_data, output_path, row.names = FALSE)
 
   # Return a message indicating completion
   cat("Combined data saved to:", output_path, "\n")
@@ -45,7 +46,25 @@ combine_monthly_data_from_folder <- function(folder_path, output_path) {
 # Call the function with the specified folder and output paths
 combine_monthly_data_from_folder("./datasets", "combined_oxford_crime_data.csv")
 
-data <- read.csv("combined_oxford_crime_data.csv")
-str(data)
-head(data)
-summary(data)
+# Load the combined data
+combined_data <- read.csv("combined_oxford_crime_data.csv")
+
+# Summarize data
+summary(combined_data)
+
+cleaned_data <- combined_data %>% select(-Context, -LSOA.code, -LSOA.name, -Last.outcome.category, -Crime.ID, -Reported.by,-Falls.within)
+
+
+library(ggplot2)
+library(ggmap)
+
+register_google(key = "AIzaSyCN1SlnwrrBwo_dyghA2aaQ7xbrNyNKXaY", write = TRUE)
+
+if (has_google_key()) {
+  cat("Google API key registered successfully.")
+} else {
+  cat("Failed to register Google API key.")
+}
+
+
+
