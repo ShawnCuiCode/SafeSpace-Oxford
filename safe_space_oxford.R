@@ -1,6 +1,8 @@
 # Load required libraries
 library(dplyr)
 library(readr)
+library(ggplot2)
+library(ggmap)
 
 # Define a function to process all .csv files in a specified folder for Oxford city data
 combine_monthly_data_from_folder <- function(folder_path, output_path) {
@@ -55,8 +57,6 @@ summary(combined_data)
 cleaned_data <- combined_data %>% select(-Context, -LSOA.code, -LSOA.name, -Last.outcome.category, -Crime.ID, -Reported.by,-Falls.within)
 
 
-library(ggplot2)
-library(ggmap)
 
 register_google(key = "AIzaSyCN1SlnwrrBwo_dyghA2aaQ7xbrNyNKXaY", write = TRUE)
 
@@ -66,5 +66,31 @@ if (has_google_key()) {
   cat("Failed to register Google API key.")
 }
 
+# Fetch the map for Oxford using cleaned longitude and latitude data
+oxford_map <- get_map(
+  location = c(lon = mean(cleaned_data$Longitude), lat = mean(cleaned_data$Latitude)),
+  zoom = 13,
+  maptype = "roadmap"
+)
+
+# Plot the heatmap
+ggmap(oxford_map) +
+  stat_density_2d(
+    aes(x = Longitude, y = Latitude, fill = ..level..),
+    data = cleaned_data,
+    geom = "polygon",
+    alpha = 0.4
+  ) +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(
+    title = "Jan-Sep 2024 Crime Heatmap of Oxford City",
+    x = "Longitude",
+    y = "Latitude",
+    fill = "Crime Density"
+  ) +
+  theme_minimal()
+
+# Save heatmap to png
+ggsave("oxford_crime_heatmap.png", width = 8, height = 6, dpi = 300)
 
 
