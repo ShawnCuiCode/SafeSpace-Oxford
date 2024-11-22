@@ -6,6 +6,7 @@ library(readr)
 library(lubridate)
 library(plotly)
 library(ggplot2)
+library(ggmap)
 
 Sys.setlocale("LC_TIME", "C")
 
@@ -79,10 +80,13 @@ cleaned_data <- cleaned_data %>%
 # Save cleaned data
 write_csv(cleaned_data, "data.csv")
 
+cleaned_data <- read_csv("data.csv")
 # Summary of cleaned data
 summary(cleaned_data)
 
+head(cleaned_data)
 
+str(cleaned_data)
 # Create a bar plot for crime type distribution
 crime_type_bar <- ggplot(cleaned_data, aes(x = Crime.type)) +
   geom_bar(fill = "skyblue", color = "black") +
@@ -116,14 +120,29 @@ crime_trend_plot <- ggplot(crime_trend_data, aes(x = Month, y = Count, color = C
 # Save the plot as a PNG file
 ggsave("crime_trends_by_month.png", plot = crime_trend_plot, width = 8, height = 6)
 
+register_google(key = "AIzaSyCN1SlnwrrBwo_dyghA2aaQ7xbrNyNKXaY")
 
-# Filter data for a specific month and crime type (e.g., January 2024, Violence and sexual offences)
+# Filter data for a specific month and crime type
 filtered_data <- cleaned_data %>%
   filter(Month == as.Date("2024-01-01"), Crime.type == "Violence and sexual offences")
 
-# Create a scatter plot for geographical distribution
-geo_plot <- ggplot(filtered_data, aes(x = Longitude, y = Latitude)) +
-  geom_point(color = "red", alpha = 0.6, size = 2) +
+# Get the map centered around the data's latitude and longitude
+map <- get_map(
+  location = c(lon = mean(filtered_data$Longitude), lat = mean(filtered_data$Latitude)),
+  zoom = 12,  # Adjust the zoom level as needed
+  maptype = "roadmap",  # Options: roadmap, satellite, hybrid, terrain
+  source = "google"  # Use "stamen" if you don't want to use Google Maps
+)
+
+# Create a scatter plot with the map as the background
+geo_plot <- ggmap(map) +
+  geom_point(
+    data = filtered_data,
+    aes(x = Longitude, y = Latitude),
+    color = "red",
+    alpha = 0.6,
+    size = 2
+  ) +
   labs(
     title = "Geographical Distribution of Violence and Sexual Offences (Jan 2024)",
     x = "Longitude",
