@@ -8,8 +8,6 @@ library(plotly)
 library(ggplot2)
 library(ggmap)
 
-Sys.setlocale("LC_TIME", "C")
-
 # Define a function to process all .csv files in a specified folder for Oxford city data
 combine_monthly_data_from_folder <- function(folder_path, output_path) {
   # List all .csv files in the specified folder
@@ -85,11 +83,12 @@ cleaned_data <- read_csv("data.csv")
 summary(cleaned_data)
 
 head(cleaned_data)
-
 str(cleaned_data)
-# Create a bar plot for crime type distribution
-crime_type_bar <- ggplot(cleaned_data, aes(x = Crime.type)) +
-  geom_bar(fill = "skyblue", color = "black") +
+
+
+crime_type_bar <- ggplot(cleaned_data, aes(x = Crime.type, fill = Crime.type)) +
+  geom_bar(color = "black") +
+  scale_fill_brewer(palette = "Set3") +  # 使用 Set3 调色板
   labs(
     title = "Crime Type Distribution",
     x = "Crime Type",
@@ -103,55 +102,65 @@ ggsave("crime_type_distribution.png", plot = crime_type_bar, width = 8, height =
 
 
 
+crime_trend_data <- cleaned_data %>%
+  group_by(Month, Crime.type) %>%
+  summarise(Count = n(), .groups = "drop")
+
 # Create a line plot for crime trends
 crime_trend_plot <- ggplot(crime_trend_data, aes(x = Month, y = Count, color = Crime.type)) +
   geom_line(size = 1) +
   geom_point(size = 2) +
+  scale_color_viridis_d(option = "plasma") +  # 使用 Viridis 调色板
   labs(
-    title = "Crime Trends by Month (Jan-Sep 2024)",  # Updated title for clarity
+    title = "Crime Trends by Month (Jan-Sep 2024)",
     x = "Month",
     y = "Count",
     color = "Crime Type"
   ) +
-  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +  # Show all months on x-axis
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Save the plot as a PNG file
 ggsave("crime_trends_by_month.png", plot = crime_trend_plot, width = 8, height = 6)
 
 register_google(key = "AIzaSyCN1SlnwrrBwo_dyghA2aaQ7xbrNyNKXaY")
 
-# Filter data for a specific month and crime type
 filtered_data <- cleaned_data %>%
   filter(Month == as.Date("2024-01-01"), Crime.type == "Violence and sexual offences")
 
-# Get the map centered around the data's latitude and longitude
+# 获取背景地图
 map <- get_map(
-  location = c(lon = mean(filtered_data$Longitude), lat = mean(filtered_data$Latitude)),
-  zoom = 12,  # Adjust the zoom level as needed
-  maptype = "roadmap",  # Options: roadmap, satellite, hybrid, terrain
-  source = "google"  # Use "stamen" if you don't want to use Google Maps
+  location = c(
+    lon = mean(filtered_data$Longitude, na.rm = TRUE),
+    lat = mean(filtered_data$Latitude, na.rm = TRUE)
+  ),
+  zoom = 12,  # 根据需求调整缩放级别
+  maptype = "roadmap",  # 可选：roadmap, satellite, hybrid, terrain
+  source = "google"  # 指定使用 Google Maps
 )
 
-# Create a scatter plot with the map as the background
+# 创建地理分布图
 geo_plot <- ggmap(map) +
   geom_point(
     data = filtered_data,
-    aes(x = Longitude, y = Latitude),
-    color = "red",
-    alpha = 0.6,
-    size = 2
+    aes(x = Longitude, y = Latitude, color = Crime.type),
+    alpha = 0.7,
+    size = 3
   ) +
+  scale_color_viridis_d(option = "plasma") +  # 使用更适合的调色板
   labs(
     title = "Geographical Distribution of Violence and Sexual Offences (Jan 2024)",
     x = "Longitude",
-    y = "Latitude"
+    y = "Latitude",
+    color = "Crime Type"
   ) +
   theme_minimal()
 
-# Save the plot as a PNG file
-ggsave("geo_distribution_jan2024.png", plot = geo_plot, width = 8, height = 6)
+# 保存绘图结果
+ggsave("geo_distribution_jan2024.png", plot = geo_plot, width = 10, height = 8)
+
+
 
 
 # Final visualisation
