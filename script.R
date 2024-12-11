@@ -235,11 +235,3 @@ interactive_map <- plot_ly(
 
 # Save the map as an HTML file
 htmlwidgets::saveWidget(interactive_map, "visualisation_2.html", selfcontained = TRUE)
-
-
-
-
-
-
-
-
