@@ -1,11 +1,12 @@
 # Load required libraries
-library(dplyr)        # For data manipulation
-library(readr)        # For reading and writing CSV files
-library(lubridate)    # For working with dates
-library(plotly)       # For creating interactive plots
-library(ggplot2)      # For creating static plots
-library(ggmap)        # For working with geographic maps
-library(viridis)      # For color palettes optimized for accessibility
+library(dplyr)
+library(readr)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+library(ggmap)
+library(viridis)
+library(stringr)
 
 # Function to combine monthly CSV files from a folder into a single file, filtered for Oxford-specific data
 combine_monthly_data_from_folder <- function(folder_path, output_path) {
